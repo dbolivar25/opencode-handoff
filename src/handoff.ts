@@ -1,6 +1,6 @@
 import type { OpencodeClient } from "@opencode-ai/sdk"
 import type { HandoffOptions, HandoffResult } from "./types.ts"
-import { analyzeSessionForHandoff, detectHandoffTypeFromGoal } from "./analyzer.ts"
+import { analyzeSessionForHandoff } from "./analyzer.ts"
 
 interface PendingHandoff {
   sessionId: string
@@ -15,18 +15,11 @@ export async function executeHandoff(
   currentSessionId: string,
   options: HandoffOptions
 ): Promise<HandoffResult> {
-  const { goal, type: overrideType } = options
+  const { goal } = options
 
-  const handoffType = overrideType ?? detectHandoffTypeFromGoal(goal)
+  const prompt = await analyzeSessionForHandoff(client, currentSessionId, goal)
 
-  const prompt = await analyzeSessionForHandoff(
-    client,
-    currentSessionId,
-    goal,
-    handoffType
-  )
-
-  const title = generateSessionTitle(goal, handoffType)
+  const title = generateSessionTitle(goal)
 
   const newSessionResponse = await client.session.create({
     body: {
@@ -80,7 +73,6 @@ export async function executeHandoff(
 
   return {
     newSessionId: newSession.id,
-    type: handoffType,
     prompt,
     files: fileReferences,
     switched: false,
@@ -109,18 +101,17 @@ function cleanupExpiredHandoffs(): void {
   }
 }
 
-function generateSessionTitle(goal: string, type: string): string {
+function generateSessionTitle(goal: string): string {
   const maxLength = 50
-  const prefix = type === "impl" ? "Impl: " : type === "planning" ? "Plan: " : ""
 
   let title = goal.trim()
   title = title.replace(/^(now\s+|please\s+|can you\s+)/i, "")
 
-  if (title.length > maxLength - prefix.length) {
-    title = title.substring(0, maxLength - prefix.length - 3) + "..."
+  if (title.length > maxLength) {
+    title = title.substring(0, maxLength - 3) + "..."
   }
 
-  return prefix + title.charAt(0).toUpperCase() + title.slice(1)
+  return title.charAt(0).toUpperCase() + title.slice(1)
 }
 
 function extractFileReferences(prompt: string): string[] {

@@ -23,6 +23,10 @@ Each handoff creates a clean context window with only conclusions, not the journ
 
 ### From npm
 
+```bash
+npm install opencode-handoff
+```
+
 Add to your `opencode.json`:
 
 ```json
@@ -38,23 +42,11 @@ Add to your `opencode.json`:
 }
 ```
 
-### From local files
+### From source
 
-1. Clone/copy this repo
-2. Build with `bun run build`
-3. Copy `dist/index.js` to `.opencode/plugin/handoff.js`
-4. Add the command config to `opencode.json`:
-
-```json
-{
-  "command": {
-    "handoff": {
-      "description": "Create focused new session from current context", 
-      "template": "$ARGUMENTS"
-    }
-  }
-}
-```
+1. Clone this repo and build: `bun install && bun run build`
+2. Copy `dist/index.js` to `.opencode/plugin/handoff.js`
+3. Add the command config to `opencode.json` (see above)
 
 ## Usage
 
@@ -62,64 +54,81 @@ Add to your `opencode.json`:
 /handoff <goal for new session>
 ```
 
-The plugin will:
-1. Ask the LLM to analyze the current session
-2. Generate a focused handoff prompt with relevant context
-3. Create a new child session
-4. Open the session list for you to select the new session
-5. Auto-fill the handoff prompt when you switch
+The LLM analyzes your session and generates a focused handoff prompt tailored to your goal. It automatically determines what kind of context you need.
 
 ### Examples
 
-After a research session:
+After research, ready to plan:
 ```
 /handoff create a detailed implementation plan for the auth system
 ```
 
-After a planning session:
+After planning, ready to implement:
 ```
 /handoff execute phase 1 of the plan
 ```
 
-Continuing implementation:
+Continue with next phase:
 ```
-/handoff now implement this for teams as well, not just individual users
+/handoff now implement this for teams as well
+```
+
+Hit a wall, need to research more:
+```
+/handoff investigate why the token refresh is failing
 ```
 
 ## How It Works
 
 1. You type `/handoff <goal>`
-2. The plugin sends a meta-prompt to the LLM asking it to analyze the session
-3. The LLM generates a focused handoff prompt containing:
-   - Relevant conclusions and decisions (not the journey)
-   - File references using `@filepath` syntax
-   - Your goal for the new session
+2. The LLM analyzes the current session and your goal
+3. It generates a handoff prompt with:
+   - Relevant `@filepath` references (loaded into context first)
+   - Appropriate context based on what your goal requires
+   - Clear goal statement
 4. A new child session is created (linked to parent)
-5. Session list opens for you to select the new session
-6. When you switch, the handoff prompt auto-fills
-7. Review/edit and press Enter to start
+5. Session list opens - select the new session
+6. Handoff prompt auto-fills, ready for you to review and send
 
-## Handoff Types
+## What the LLM Extracts
 
-The plugin automatically detects the type of handoff based on your goal:
+The LLM adapts the handoff based on your goal:
 
-| Type | Triggered by | Focus |
-|------|--------------|-------|
-| `impl` | "execute", "implement", "build", "phase" | Just the plan, minimal context |
-| `planning` | "plan", "design", "architect" | Research findings and decisions |
-| `research` | "research", "explore", "investigate" | Conclusions and next directions |
-| `general` | (default) | Balanced context extraction |
+**For implementation goals** (execute, build, implement):
+- The plan/phase being executed
+- Numbered tasks and specific steps
+- Exact file paths, function names, signatures
+
+**For planning goals** (design, architect, plan):
+- Key findings from research
+- Constraints to respect
+- Decisions that need to be made
+
+**For research goals** (investigate, explore, understand):
+- Current understanding
+- Dead ends to avoid
+- Specific questions to answer
+
+**For general goals**:
+- Brief current state
+- What needs to happen next
+
+## Principles
+
+Every handoff follows these principles:
+
+- **Files first** - `@filepath` references load context before prose
+- **No journey** - Only conclusions matter, not how you got there
+- **Actionable immediately** - Start working from the first line
+- **Dense information** - Like notes from a colleague, not a report
 
 ## Programmatic Usage
-
-You can use the handoff function directly in your own plugins:
 
 ```typescript
 import { executeHandoff } from "opencode-handoff"
 
 const result = await executeHandoff(client, sessionId, {
   goal: "implement the auth system",
-  type: "impl", // optional override
 })
 
 console.log(result.newSessionId) // ID of the new session

@@ -1,9 +1,9 @@
 import type { Plugin } from "@opencode-ai/plugin"
 import { executeHandoff, getPendingHandoff, clearPendingHandoff } from "./handoff.ts"
 
-export type { HandoffOptions, HandoffResult, HandoffType } from "./types.ts"
+export type { HandoffOptions, HandoffResult } from "./types.ts"
 export { executeHandoff } from "./handoff.ts"
-export { analyzeSessionForHandoff, detectHandoffTypeFromGoal } from "./analyzer.ts"
+export { analyzeSessionForHandoff } from "./analyzer.ts"
 
 export const HandoffPlugin: Plugin = async ({ client }) => {
   return {
