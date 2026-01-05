@@ -5,6 +5,7 @@ import { analyzeSessionForHandoff } from "./analyzer.ts"
 interface PendingHandoff {
   sessionId: string
   prompt: string
+  title: string
   expires: number
 }
 
@@ -38,7 +39,8 @@ export async function executeHandoff(
   pendingHandoffs.set(newSession.id, {
     sessionId: newSession.id,
     prompt,
-    expires: Date.now() + 5 * 60 * 1000,
+    title,
+    expires: Date.now() + 10 * 60 * 1000,
   })
 
   cleanupExpiredHandoffs()
@@ -62,9 +64,9 @@ export async function executeHandoff(
     await client.tui.showToast({
       body: {
         title: "Handoff Ready",
-        message: `Select "${title}" to continue`,
+        message: `Select "${truncate(title, 30)}" to continue`,
         variant: "success",
-        duration: 5000,
+        duration: 6000,
       },
     })
   } catch (_) {
@@ -102,10 +104,10 @@ function cleanupExpiredHandoffs(): void {
 }
 
 function generateSessionTitle(goal: string): string {
-  const maxLength = 50
+  const maxLength = 60
 
   let title = goal.trim()
-  title = title.replace(/^(now\s+|please\s+|can you\s+)/i, "")
+  title = title.replace(/^(now\s+|please\s+|can you\s+|i want to\s+|let's\s+)/i, "")
 
   if (title.length > maxLength) {
     title = title.substring(0, maxLength - 3) + "..."
@@ -114,9 +116,31 @@ function generateSessionTitle(goal: string): string {
   return title.charAt(0).toUpperCase() + title.slice(1)
 }
 
+function truncate(str: string, maxLength: number): string {
+  if (str.length <= maxLength) return str
+  return str.substring(0, maxLength - 3) + "..."
+}
+
 function extractFileReferences(prompt: string): string[] {
-  const matches = prompt.match(/@[\w/.@-]+/g) || []
-  return [...new Set(matches.map((m) => m.slice(1)))]
+  const filePatterns = [
+    /@([\w./-]+\.\w+)/g,
+    /@(src\/[\w./-]+)/g,
+    /@(lib\/[\w./-]+)/g,
+    /@(packages\/[\w./-]+)/g,
+  ]
+
+  const files = new Set<string>()
+
+  for (const pattern of filePatterns) {
+    const matches = prompt.matchAll(pattern)
+    for (const match of matches) {
+      if (match[1]) {
+        files.add(match[1])
+      }
+    }
+  }
+
+  return Array.from(files)
 }
 
 function sleep(ms: number): Promise<void> {

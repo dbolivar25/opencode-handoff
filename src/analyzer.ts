@@ -29,52 +29,85 @@ export async function analyzeSessionForHandoff(
 }
 
 function buildSystemPrompt(): string {
-  return `You are generating a handoff prompt to start a new focused session.
-Your output will be used DIRECTLY as the initial prompt in a fresh context window with NO prior history.
+  return `You are generating a handoff prompt to start a new focused coding session.
+Your output will be used DIRECTLY as the initial prompt in a fresh context window with NO prior conversation history.
 
-CRITICAL RULES:
-1. Output ONLY the handoff content - no meta-commentary, no "Here's the handoff:"
-2. Start with @filepath references - these load files into context first
-3. The new session must be able to start work IMMEDIATELY from your output
-4. Include only what's needed for the NEXT task - not what led to it
+CRITICAL OUTPUT RULES:
+- Output ONLY the raw handoff content
+- NO preamble ("Here's the handoff:", "Based on our conversation:", etc.)
+- NO markdown code blocks or quotes wrapping the output
+- NO meta-commentary or explanations
+- Start directly with the @filepath references
 
-FORMAT STRUCTURE:
+STRUCTURE (follow exactly):
 
-@filepath/relevant.ts
-@filepath/another.ts
-[ALL files the new session needs - to read, modify, or create]
+1. FILE REFERENCES (first, required)
+   @path/to/file1.ts
+   @path/to/file2.ts
+   [one file per line, ALL files needed]
 
-The goal is to [clear statement of what this session will accomplish].
+2. GOAL STATEMENT
+   The goal is to [specific, actionable goal].
 
-[Relevant context - adapt based on what the goal requires:]
+3. CONTEXT (adapt based on goal type)
+   
+   For implementation/execution goals:
+   - Phase/section name and time estimate if known
+   - Numbered task list (high-level)
+   - Specific steps with exact file paths, function names, signatures
+   - Code to reuse: "Reuse functionName from @path/file.ts"
+   
+   For planning/design goals:
+   - Key findings that inform the design
+   - Constraints that must be respected
+   - Decisions that need to be made
+   
+   For research/investigation goals:
+   - Current understanding (facts only)
+   - Dead ends to NOT repeat
+   - Specific questions to answer
+   
+   For general continuation:
+   - Brief current state
+   - Clear next action
 
-For IMPLEMENTATION goals (executing a plan, building something):
-- Include the plan/phase being executed
-- Numbered tasks (high-level)
-- Specific steps with exact file paths, function names, signatures
-- Mention functions to reuse from existing files
-
-For PLANNING goals (designing, architecting):
-- Key findings that inform the design
-- Constraints that must be respected
-- Decisions that need to be made
-
-For RESEARCH goals (investigating, exploring):
-- Current understanding (facts only)
-- Dead ends to avoid repeating
-- Specific questions to answer next
-
-For CONTINUATION goals (general next steps):
-- Brief current state
-- What needs to happen next
+4. CONSTRAINTS/WARNINGS (if any)
+   - Critical constraints
+   - Known blockers or issues
 
 PRINCIPLES:
-- Files are the primary context - list them thoroughly
+- Files first - they load into context before the text
 - Be concrete: exact paths, function names, types, signatures
-- No journey recap - only conclusions matter
-- No rationale unless critical to the task
-- Dense with actionable information
-- The handoff should feel like picking up detailed notes from a colleague`
+- No journey recap - only conclusions and actionable next steps
+- Dense information - like notes from a senior engineer
+- The new session should be able to start work immediately
+
+EXAMPLE OUTPUT:
+
+@src/auth/oauth-provider.ts
+@src/auth/token-service.ts
+@src/types/auth.ts
+@src/middleware/auth-middleware.ts
+
+The goal is to execute Phase 2 of the OAuth Implementation Plan.
+
+Phase 2: Token Management (Estimated: 4-6 hours)
+
+Tasks:
+1. Implement token refresh logic
+2. Add token revocation endpoint  
+3. Update middleware to handle refresh flow
+
+Specific steps:
+1. Create refreshToken function in @src/auth/token-service.ts that takes RefreshTokenRequest and returns TokenPair.
+2. Reuse validateToken from @src/auth/oauth-provider.ts for token validation.
+3. Add POST /auth/refresh endpoint in @src/routes/auth.ts using the new refreshToken function.
+4. Update authMiddleware in @src/middleware/auth-middleware.ts to catch expired tokens and attempt refresh.
+5. Add token revocation by implementing revokeToken(tokenId: string): Promise<void> in token-service.ts.
+
+Constraints:
+- Must maintain backward compatibility with existing JWT flow
+- Refresh tokens expire in 7 days (from Phase 1 decision)`
 }
 
 function buildUserPrompt(goal: string): string {
@@ -82,12 +115,11 @@ function buildUserPrompt(goal: string): string {
 
 USER'S GOAL: "${goal}"
 
-Analyze our conversation and determine:
-1. What kind of work will the new session do?
-2. What context does it need to do that work immediately?
-3. What files should be loaded?
+Analyze our conversation above and create a handoff that:
+1. Lists all relevant files with @filepath syntax at the top
+2. States the goal clearly  
+3. Provides actionable context appropriate for this goal
+4. Includes concrete details (file paths, function names, types)
 
-Then generate the handoff following the format in your instructions.
-Adapt the context section based on what the goal requires.
-Output ONLY the handoff content.`
+Start directly with the @filepath references. No preamble.`
 }
