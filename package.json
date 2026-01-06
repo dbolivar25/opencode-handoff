@@ -1,5 +1,5 @@
 {
-  "name": "opencode-handoff",
+  "name": "@dbolivar25/opencode-handoff",
   "version": "0.1.0",
   "description": "OpenCode plugin for session handoff - transfer context to focused new sessions without compaction loss",
   "type": "module",
@@ -32,12 +32,16 @@
     "ai",
     "cli"
   ],
-  "author": "",
+  "author": "dbolivar25",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "git+https://github.com/dbolivar25/opencode-handoff.git"
   },
+  "bugs": {
+    "url": "https://github.com/dbolivar25/opencode-handoff/issues"
+  },
+  "homepage": "https://github.com/dbolivar25/opencode-handoff#readme",
   "devDependencies": {
     "@types/bun": "latest",
     "typescript": "^5"
