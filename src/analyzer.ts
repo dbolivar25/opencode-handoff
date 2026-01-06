@@ -10,8 +10,14 @@ export async function analyzeSessionForHandoff(
   }
   if (!client.session) {
     const availableProps = Object.keys(client).join(", ")
+    const hasTui = "tui" in client
+    const hasNestedClient = "client" in client
+    const nestedType = hasNestedClient ? typeof (client as any).client : "N/A"
+    const nestedKeys = hasNestedClient && (client as any).client
+      ? Object.keys((client as any).client).join(", ")
+      : "N/A"
     throw new Error(
-      `Handoff: client.session is undefined. Available properties: ${availableProps}`
+      `client.session undefined | props: [${availableProps}] | tui: ${hasTui} | nested: ${hasNestedClient} (${nestedType}) | nestedKeys: [${nestedKeys}]`
     )
   }
 

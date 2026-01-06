@@ -1,6 +1,6 @@
 {
   "name": "@danielbolivar/opencode-handoff",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "OpenCode plugin for session handoff - transfer context to focused new sessions without compaction loss",
   "type": "module",
   "main": "dist/index.js",
