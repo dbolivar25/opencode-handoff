@@ -1,5 +1,5 @@
 {
-  "name": "@dbolivar25/opencode-handoff",
+  "name": "@danielbolivar/opencode-handoff",
   "version": "0.1.0",
   "description": "OpenCode plugin for session handoff - transfer context to focused new sessions without compaction loss",
   "type": "module",
