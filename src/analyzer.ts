@@ -5,6 +5,16 @@ export async function analyzeSessionForHandoff(
   sessionId: string,
   goal: string
 ): Promise<string> {
+  if (!client) {
+    throw new Error("Handoff: client is undefined")
+  }
+  if (!client.session) {
+    const availableProps = Object.keys(client).join(", ")
+    throw new Error(
+      `Handoff: client.session is undefined. Available properties: ${availableProps}`
+    )
+  }
+
   const systemPrompt = buildSystemPrompt()
   const userPrompt = buildUserPrompt(goal)
 
