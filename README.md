@@ -1,4 +1,4 @@
-# opencode-handoff
+# @danielbolivar/opencode-handoff
 
 Transfer context to focused new sessions without compaction loss.
 
@@ -24,7 +24,7 @@ Each handoff creates a clean context window with only conclusions, not the journ
 ### From npm
 
 ```bash
-npm install opencode-handoff
+npm install @danielbolivar/opencode-handoff
 ```
 
 Add to your `opencode.json`:
@@ -32,7 +32,7 @@ Add to your `opencode.json`:
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["opencode-handoff"],
+  "plugin": ["@danielbolivar/opencode-handoff"],
   "command": {
     "handoff": {
       "description": "Create focused new session from current context",
@@ -125,7 +125,7 @@ Every handoff follows these principles:
 ## Programmatic Usage
 
 ```typescript
-import { executeHandoff } from "opencode-handoff"
+import { executeHandoff } from "@danielbolivar/opencode-handoff"
 
 const result = await executeHandoff(client, sessionId, {
   goal: "implement the auth system",
