@@ -9,8 +9,13 @@ export const HandoffPlugin: Plugin = async ({ client }) => {
         return
       }
 
+      if (event.type === "tui.session.select") {
+        await handleSessionActivation(client, event.properties.sessionID)
+        return
+      }
+
       if (event.type === "session.idle") {
-        await handleSessionIdle(client, event.properties.sessionID)
+        await handleSessionActivation(client, event.properties.sessionID)
         return
       }
     },
@@ -58,7 +63,7 @@ async function handleHandoffCommand(
   }
 }
 
-async function handleSessionIdle(
+async function handleSessionActivation(
   client: Parameters<Plugin>[0]["client"],
   sessionId: string
 ): Promise<void> {
